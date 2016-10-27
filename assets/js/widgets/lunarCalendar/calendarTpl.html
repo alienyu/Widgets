@@ -1,0 +1,24 @@
+<script type="text/template" id="dateTpl">
+    <table class="<%= data.type %>">
+        <% var list = data.date %>
+        <% for(var i=0;i<list.length;i++) { %>
+            <% var eachDay = list[i]; %>
+            <% if(i%7 == 0) { %>
+                <tr>
+            <% } %>
+            <% var className = "" %>
+            <% if(eachDay.nWeek > 5) { %>
+                <% className = 'weekend' %>
+            <% } %>
+            <% if(eachDay.isToday) { %>
+                <% className = 'today' %>
+            <% } %>
+            <td><%= className %>
+                <div class="solar"><%= </div>
+            </td>
+            <% if(i%7 == 0) { %>
+                </tr>
+            <% } %>
+        <% } %>
+    </table>
+</script>

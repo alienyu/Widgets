@@ -1,6 +1,6 @@
 var $ = require("zepto");
 var Lunar = require("./lunar.js");
-var _ = require("../vendor/underscore.js");
+var _ = require("../../vendor/underscore.js");
 
 var LunarCalendar = function(ops) {
     this.ops = $.extend({
@@ -24,6 +24,9 @@ LunarCalendar.prototype = {
     initCalendar: function() {
         var date = this.calculateRenderYM() //计算需要渲染的年月份
         this.calculateYMData(date); //计算需要渲染的年月份的详细数据
+        console.log(this.ops.cacheData);
+        console.log(this.ops.currentData);
+        this.renderCalendar(); //渲染日历的html代码
     },
     calculateRenderYM: function() {
         var currentYM = [];
@@ -36,19 +39,20 @@ LunarCalendar.prototype = {
     },
     calculateYMData: function(date) {
         var that = this;
+        this.ops.currentData = {};
         $(date).each(function(i,e) {
             if(that.ops.cacheData[e.date]) {
-                that.currentData[e.date]['date'] = that.ops.cacheData[e.date];
-                that.currentData['type'] = e.type;
+                that.ops.currentData[e.date]['date'] = that.ops.cacheData[e.date];
+                that.ops.currentData['type'] = e.type;
             } else {
-                that.calculateDetailDate(e, e.type);
+                that.calculateDetailDate(e);
             }
         });
     },
     //计算当月每一天的详细数据
-    calculateDetailDate: function(date, type) {
-        var year = parseInt(date.split("-")[0], 10);
-        var month = parseInt(date.split("-")[1], 10);
+    calculateDetailDate: function(date) {
+        var year = parseInt(date.date.split("-")[0], 10);
+        var month = parseInt(date.date.split("-")[1], 10);
         var dayNum = Lunar.solarMonth[month-1]; //获取当月多少天
         var dateArr = []; //指定月份的详细数据
         //闰月的二月加一天
@@ -56,18 +60,29 @@ LunarCalendar.prototype = {
             dayNum += 1;
         }
         for(var i=0;i<dayNum;i++) {
-            var dayData = Lunar.solar2lunar(year, month);
+            var dayData = Lunar.solar2lunar(year, month, i+1);
             dateArr.push(dayData);
         }
-        this.cacheData[date] = dateArr;
-        this.currentData[date] = {
-            date: dateArr,
-            type: type
+        var prevEmptyData = dateArr[0].nWeek - 1;
+        for(var j=0;j<prevEmptyData;j++) {
+            dateArr.unshift("");
         }
+        var nextEmptyData = 42 - dateArr.length;
+        for(var k=0;k<nextEmptyData;k++) {
+            dateArr.push("");
+        }
+        this.ops.cacheData[date.date] = dateArr;
+        this.ops.currentData[date.date] = {
+            date: dateArr,
+            type: date.type
+        }
+    },
+    renderCalendar: function() {
+
     },
     bindEvent: function() {
 
     }
 }
 
-module.exports = lunarCalendar;
+module.exports = LunarCalendar;
