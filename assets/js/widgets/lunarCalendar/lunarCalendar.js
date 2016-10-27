@@ -1,5 +1,7 @@
 var $ = require("zepto");
 var Lunar = require("./lunar.js");
+var _ = require("../vendor/underscore.js");
+
 var LunarCalendar = function(ops) {
     this.ops = $.extend({
         dom: "calendar",
@@ -67,3 +69,5 @@ LunarCalendar.prototype = {
 
     }
 }
+
+module.exports = lunarCalendar;
