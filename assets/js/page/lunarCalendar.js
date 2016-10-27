@@ -4,10 +4,11 @@ var $ = require("zepto");
 var fuc = {
     config: {},
     init: function() {
-        new LunarCalendar({
+        var lunar = new LunarCalendar({
             cyear: "2016",
             cmonth: "10"
-        })
+        });
+        lunar.switchMode("lunar");
         //this.animate();
     },
     animate: function() {

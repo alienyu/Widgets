@@ -1,6 +1,9 @@
+require("./lunarCalendar.less");
 var $ = require("zepto");
 var Lunar = require("./lunar.js");
 var _ = require("../../vendor/underscore.js");
+var calendarDateTpl = require("./calendarTpl.html");
+var calendarDateHtml = _.template(calendarDateTpl);
 
 var LunarCalendar = function(ops) {
     this.ops = $.extend({
@@ -63,7 +66,7 @@ LunarCalendar.prototype = {
             var dayData = Lunar.solar2lunar(year, month, i+1);
             dateArr.push(dayData);
         }
-        var prevEmptyData = dateArr[0].nWeek - 1;
+        var prevEmptyData = dateArr[0].nWeek;
         for(var j=0;j<prevEmptyData;j++) {
             dateArr.unshift("");
         }
@@ -78,10 +81,39 @@ LunarCalendar.prototype = {
         }
     },
     renderCalendar: function() {
-
+        this.renderCalendarFrame();
+        this.renderCalendarDate("init");
+    },
+    renderCalendarFrame: function() {
+        var calendarHtml = require("./lunarCalendar.html");
+        $("#" + this.ops.dom).addClass("lunar_calendar").append(calendarHtml);
+    },
+    renderCalendarDate: function(type) {
+        for(var key in this.ops.currentData) {
+            if(type == "init") {
+                $("#calendarDate").append(calendarDateHtml({data: this.ops.currentData[key]}));
+            }
+        }
     },
     bindEvent: function() {
 
+    },
+    switchMode: function(type) {
+        if(type == "solar") {
+            $("#calendarDate .solar").each(function(i,e) {
+                $(e).removeClass("hide");
+            });
+            $("#calendarDate .lunar").each(function(i,e) {
+                $(e).addClass("hide");
+            });
+        } else {
+            $("#calendarDate .lunar").each(function(i,e) {
+                $(e).removeClass("hide");
+            });
+            $("#calendarDate .solar").each(function(i,e) {
+                $(e).addClass("hide");
+            });
+        }
     }
 }
 
