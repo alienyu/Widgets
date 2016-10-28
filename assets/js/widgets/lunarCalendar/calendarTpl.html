@@ -21,9 +21,13 @@
         <% if(eachDay.isToday) { %>
             <% className = 'today' %>
         <% } %>
+        <% if(eachDay.isCurrentMonth == false) { %>
+            <% className = 'fill_date' %>
+        <% } %>
         <td>
-            <div class="solar <%= className %>"><%= eachDay.cDay == 1 ? eachDay.cMonth + '月' : eachDay.cDay %></div>
-            <div class="hide lunar <%= className %>"><%= eachDay.IDayCn == '初一' ? eachDay.IMonthCn : eachDay.IDayCn %></div>
+            <div class="<%= data.mode == 'solar' ? '' : 'hide' %> solar <%= className %>"><%= eachDay.cDay == 1 ? eachDay.cMonth + '月' : eachDay.cDay %></div>
+            <div class="<%= data.mode == 'lunar' ? '' : 'hide' %> lunar <%= className %>"><%= eachDay.IDayCn == '初一' ? eachDay.IMonthCn : eachDay.IDayCn %></div>
+            <div class="hide_date" data-index="<%= i %>" data-year="<%= eachDay.cYear %>" data-month="<%= eachDay.cMonth %>"></div>
         </td>
         <% if(i%7 == 6) { %>
             </tr>

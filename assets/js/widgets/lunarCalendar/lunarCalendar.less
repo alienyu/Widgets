@@ -26,7 +26,7 @@
     .date {
         position: relative;
         width: 100%;
-        height: 305px;
+        height: 248px;
         margin-top: -1px;
         overflow: hidden;
         table {
@@ -52,7 +52,7 @@
                         border-right: 0px;
                     }
                     div {
-                        &.hide {
+                        &.hide, &.hide_date {
                             display: none;
                         }
                         &.weekend {
@@ -61,6 +61,10 @@
                         &.today {
                             background-color: #328AD2;
                             color: #fff;
+                        }
+                        &.fill_date {
+                            background-color: #fff;
+                            color: #E0DCDC;
                         }
                         &.solar {
                             &.solar_first {

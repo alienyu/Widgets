@@ -14,7 +14,8 @@ var LunarCalendar = function(ops) {
         cmonth: new Date().getMonth() + 1, //初始化月份
         cday: new Date().getDay(), // 初始化日
         cacheData: {}, //缓存已经过计算的年月数据
-        currentData: {} //包含当前月,以及前后两月的数据
+        currentData: {}, //包含当前月,以及前后两月的数据
+        dateClickCallback: "" //日期点击事件
     }, ops);
     this.init();
 }
@@ -46,6 +47,7 @@ LunarCalendar.prototype = {
                 that.ops.currentData[e.date] = {};
                 that.ops.currentData[e.date]['date'] = that.ops.cacheData[e.date];
                 that.ops.currentData[e.date]['type'] = e.type;
+                that.ops.currentData[e.date]['mode'] = that.ops.mode;
             } else {
                 that.calculateDetailDate(e);
             }
@@ -67,19 +69,33 @@ LunarCalendar.prototype = {
             var dayData = Lunar.solar2lunar(year, month, i+1);
             dateArr.push(dayData);
         }
-        var prevEmptyData = dateArr[0].nWeek;
-        for(var j=0;j<prevEmptyData;j++) {
-            dateArr.unshift("");
-        }
-        var nextEmptyData = 42 - dateArr.length;
-        for(var k=0;k<nextEmptyData;k++) {
-            dateArr.push("");
-        }
+        dateArr = this.getPrevEmptyDate(dateArr, year, month);
+        dateArr = this.getNextEmptyDate(dateArr, year, month);
         this.ops.cacheData[date.date] = dateArr;
         this.ops.currentData[date.date] = {
             date: dateArr,
-            type: date.type
+            type: date.type,
+            mode: this.ops.mode
         }
+    },
+    getPrevEmptyDate: function(arr, year, month) {
+        var emptyNum = arr[0].nWeek % 7;
+        var prevMonth = (month -1 > 0) ? (month - 1) : 12;
+        var prevYear = (month - 1 > 0) ? year : year - 1 ;
+        var dayNum = Lunar.solarMonth[prevMonth -1];
+        for(var i = dayNum;i > dayNum - emptyNum;i --) {
+            arr.unshift($.extend(Lunar.solar2lunar(prevYear, prevMonth, i), {isCurrentMonth: false}));
+        }
+        return arr;
+    },
+    getNextEmptyDate: function(arr, year, month) {
+        var emptyNum = 42 - arr.length;
+        var nextMonth = (month + 1) > 12 ? 1 : (month + 1);
+        var nextYear = (month + 1) > 12 ? (year + 1) : year;
+        for(var i = 1;i < emptyNum + 1;i ++) {
+            arr.push($.extend(Lunar.solar2lunar(nextYear, nextMonth, i), {isCurrentMonth: false}))
+        }
+        return arr;
     },
     renderCalendar: function() {
         this.renderCalendarFrame();
@@ -132,14 +148,31 @@ LunarCalendar.prototype = {
     },
     bindEvent: function() {
         this.bindCalendarSwipe();
+        this.bindDateClick();
     },
     bindCalendarSwipe: function() {
         var that = this;
-        $("#calendarDate").bind("swipeLeft", function(e) {
+        $("#calendar").delegate("#calendarDate", "swipeLeft", function(e) {
             that.switchToNextMonth();
         });
-        $("#calendarDate").bind("swipeRight", function(e) {
+        $("#calendar").delegate("#calendarDate", "swipeRight", function(e) {
             that.switchToPrevMonth();
+        });
+    },
+    bindDateClick: function() {
+        var that = this;
+        $("#calendar").delegate("td", "tap", function(e) {
+            if(!$(this).find("div").eq(0).hasClass("fill_date")) {
+                var dom = $(this).find(".hide_date");
+                var key = dom.data('year') + "-" + dom.data('month');
+                var index = parseInt(dom.data("index"), 10);
+                var data = that.ops.cacheData[key][index];
+                if(that.ops.dateClickCallback) {
+                    that.ops.dateClickCallback.call(that, data);
+                } else {
+                    console.log(data);
+                }
+            }
         });
     },
     switchToPrevMonth: function() {
@@ -172,6 +205,7 @@ LunarCalendar.prototype = {
             $("#calendarDate .lunar").each(function(i,e) {
                 $(e).addClass("hide");
             });
+            this.ops.mode = "solar";
         } else {
             $("#calendarDate .lunar").each(function(i,e) {
                 $(e).removeClass("hide");
@@ -179,7 +213,20 @@ LunarCalendar.prototype = {
             $("#calendarDate .solar").each(function(i,e) {
                 $(e).addClass("hide");
             });
+            this.ops.mode = "lunar";
         }
+    },
+    toToday: function() {
+        $("#calendar").empty();
+        this.ops.cyear = new Date().getFullYear();
+        this.ops.cmonth = new Date().getMonth() + 1;
+        this.initCalendar();
+    },
+    getTodayDate: function() {
+        var year = new Date().getFullYear();
+        var month = new Date().getMonth() + 1;
+        var day = new Date().getDate();
+        return Lunar.solar2lunar(year, month, day);
     }
 }
 
