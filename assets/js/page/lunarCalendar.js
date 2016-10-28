@@ -8,7 +8,7 @@ var fuc = {
             cyear: "2016",
             cmonth: "10"
         });
-        lunar.switchMode("lunar");
+        //lunar.switchMode("lunar");
         //this.animate();
     },
     animate: function() {
