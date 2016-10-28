@@ -167,6 +167,11 @@ LunarCalendar.prototype = {
                 var key = dom.data('year') + "-" + dom.data('month');
                 var index = parseInt(dom.data("index"), 10);
                 var data = that.ops.cacheData[key][index];
+                $("div .today").each(function(i,e) {
+                    $(e).removeClass("today");
+                });
+                $(this).find("div").eq(0).addClass("today")
+                $(this).find("div").eq(1).addClass("today");
                 if(that.ops.dateClickCallback) {
                     that.ops.dateClickCallback.call(that, data);
                 } else {
