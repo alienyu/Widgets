@@ -13,11 +13,12 @@ var fuc = {
     },
     bindEvent: function() {
         var that = this;
-        $('#switchLunar').click(function(e) {
-            that.lunar.switchMode("lunar");
-        });
-        $('#switchSolar').click(function(e) {
-            that.lunar.switchMode("solar");
+        $('.lunar input').change(function(e) {
+            if(e.target.checked) {
+                that.lunar.switchMode("lunar");
+            } else {
+                that.lunar.switchMode("solar");
+            }
         });
         $("#toToday").click(function(e) {
             that.lunar.toToday();

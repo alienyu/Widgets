@@ -67,6 +67,9 @@ LunarCalendar.prototype = {
         }
         for(var i=0;i<dayNum;i++) {
             var dayData = Lunar.solar2lunar(year, month, i+1);
+            if((year != new Date().getFullYear() || month != (new Date().getMonth() + 1)) && i == 0) {
+                dayData.isToday = true;
+            }
             dateArr.push(dayData);
         }
         dateArr = this.getPrevEmptyDate(dateArr, year, month);
@@ -83,6 +86,9 @@ LunarCalendar.prototype = {
         var prevMonth = (month -1 > 0) ? (month - 1) : 12;
         var prevYear = (month - 1 > 0) ? year : year - 1 ;
         var dayNum = Lunar.solarMonth[prevMonth -1];
+        if(prevYear % 4 == 0 && prevMonth == 2) {
+            dayNum += 1;
+        }
         for(var i = dayNum;i > dayNum - emptyNum;i --) {
             arr.unshift($.extend(Lunar.solar2lunar(prevYear, prevMonth, i), {isCurrentMonth: false}));
         }
@@ -167,7 +173,7 @@ LunarCalendar.prototype = {
                 var key = dom.data('year') + "-" + dom.data('month');
                 var index = parseInt(dom.data("index"), 10);
                 var data = that.ops.cacheData[key][index];
-                $("div .today").each(function(i,e) {
+                $(".current .today").each(function(i,e) {
                     $(e).removeClass("today");
                 });
                 $(this).find("div").eq(0).addClass("today")
