@@ -15,7 +15,10 @@ var LunarCalendar = function(ops) {
         cday: new Date().getDay(), // 初始化日
         cacheData: {}, //缓存已经过计算的年月数据
         currentData: {}, //包含当前月,以及前后两月的数据
-        dateClickCallback: "" //日期点击事件
+        initOver: "", //渲染完成的回调
+        dateClickCallback: "", //日期点击事件
+        switchPrevMonthCallback: "", //选择前一个月回调
+        switchNextMonthCallback: "" //选择后一个月回调
     }, ops);
     this.init();
 }
@@ -26,9 +29,18 @@ LunarCalendar.prototype = {
         this.bindEvent();
     },
     initCalendar: function() {
-        var date = this.calculateRenderYM() //计算需要渲染的年月份
+        var date = this.calculateRenderYM(); //计算需要渲染的年月份
         this.calculateYMData(date); //计算需要渲染的年月份的详细数据
         this.renderCalendar(); //渲染日历的html代码
+        var date = this.returnInitDate(); //返回初始化渲染的日期
+        this.ops.initOver && this.ops.initOver.call(this, date); //渲染完成后的回调
+    },
+    returnInitDate: function() {
+        var year = new Date().getFullYear();
+        var month = new Date().getMonth() + 1;
+        var day = new Date().getDate();
+        var date = Lunar.solar2lunar(year, month, day);
+        return date;
     },
     calculateRenderYM: function() {
         var currentYM = [];
@@ -140,6 +152,8 @@ LunarCalendar.prototype = {
             $("table").eq(1).removeClass("current").removeClass("current2prev");
             $("table").eq(2).removeClass("next").removeClass("next2current");
             that.renderNextMonth(html);
+            var date = that.getCurrentMonthShotDate();
+            that.ops.switchNextMonthCallback && that.ops.switchNextMonthCallback(date);
         },600)
     },
     turnRight: function(html) {
@@ -150,6 +164,8 @@ LunarCalendar.prototype = {
             $("table").eq(0).removeClass("prev").removeClass("prev2current");
             $("table").eq(1).removeClass("current").removeClass("current2next");
             that.renderPrevMonth(html);
+            var date = that.getCurrentMonthShotDate();
+            that.ops.switchPrevMonthCallback && that.ops.switchPrevMonthCallback(date);
         },600)
     },
     bindEvent: function() {
@@ -163,7 +179,16 @@ LunarCalendar.prototype = {
         });
         $("#calendar").delegate("#calendarDate", "swipeRight", function(e) {
             that.switchToPrevMonth();
+            var date = that.getCurrentMonthShotDate();
+            that.ops.switchPrevMonthCallback && that.ops.switchPrevMonthCallback(date);
         });
+    },
+    getCurrentMonthShotDate: function() {
+        var dom = $('.current .today').parent().find(".hide_date");
+        var key = dom.data('year') + "-" + dom.data('month');
+        var index = parseInt(dom.data("index"), 10);
+        var date = this.ops.cacheData[key][index];
+        return date;
     },
     bindDateClick: function() {
         var that = this;
