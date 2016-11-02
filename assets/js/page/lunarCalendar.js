@@ -1,5 +1,6 @@
 require("../../css/page/lunarCalendar.less");
 var LunarCalendar = require("../widgets/lunarCalendar/lunarCalendar.js");
+var timeSelect = require("../widgets/timeSelect/timeSelect.js");
 var $ = require("zepto");
 var fuc = {
     config: {},
@@ -27,6 +28,7 @@ var fuc = {
                 that.switchCalendarText(date);
             }
         });
+        this.timeSelect = new timeSelect();
         this.bindEvent();
     },
     switchCalendarText: function(date) {
