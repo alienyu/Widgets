@@ -63,7 +63,7 @@
 /******/ 	}
 /******/
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "7adab2ae7ae3e949e8f8"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "7a85312c5613b98b71c4"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
 /******/
@@ -583,11 +583,13 @@
 
 	__webpack_require__(1);
 	var LunarCalendar = __webpack_require__(3);
+	var timeSelect = __webpack_require__(11);
 	var $ = __webpack_require__(5);
 	var fuc = {
 	    config: {},
 	    init: function() {
 	        var that = this;
+	        $(".calendar .time").text(new Date().getHours() + ":" + new Date().getMinutes());
 	        this.lunar = new LunarCalendar({
 	            initOver: function(date) {
 	                that.config.currentDate = date;
@@ -610,6 +612,16 @@
 	                that.switchCalendarText(date);
 	            }
 	        });
+	        this.timeSelect = new timeSelect({
+	            dom: "timeSelect",
+	            hour: new Date().getHours(),
+	            minute: new Date().getMinutes(),
+	            changeTimeCallback: function(hour, min) {
+	                hour = (hour.toString().length == 1) ? ("0" + hour.toString()) : hour;
+	                min = (min.toString().length == 1) ? ("0" + min.toString()) : min;
+	                $(".calendar .time").text(hour + ":" + min);
+	            }
+	        });
 	        this.bindEvent();
 	    },
 	    switchCalendarText: function(date) {
@@ -626,12 +638,16 @@
 	        this.addCalendarTextHiddenDate(date.cYear, date.cMonth, date.cDay);;
 	    },
 	    addCalendarTextHiddenDate: function(year, month ,day) {
-	        $(".calendar .date").attr("date-year", year).attr("date-month", month).attr("date-day", day);
+	        $(".calendar .date").attr("data-year", year).attr("data-month", month).attr("data-day", day);
 	    },
 	    bindEvent: function() {
 	        var that = this;
 	        $('.lunar input').change(function(e) {
 	            var calendarText = "";
+	            $(".date").addClass("active");
+	            $(".time").removeClass("active");
+	            $("#calendar").removeClass("hide");
+	            $("#timeSelect").addClass("hide");
 	            if(e.target.checked) {
 	                that.lunar.switchMode("lunar");
 	                calendarText = that.config.currentDate.cYear + "年" + that.config.currentDate.IMonthCn + that.config.currentDate.IDayCn;
@@ -644,6 +660,32 @@
 	        });
 	        $("#toToday").click(function(e) {
 	            that.lunar.toToday();
+	        });
+	
+	        $(".full_day input").change(function(e) {
+	           if(e.target.checked) {
+	               that.timeSelect.changeHM(0,0);
+	               $(".calendar .time").text("00:00");
+	           }
+	        });
+	
+	        $('.calendar').delegate("div","tap", function(e) {
+	            if($(e.target).hasClass('date')) {
+	                $(".date").addClass("active");
+	                $(".time").removeClass("active");
+	                $("#calendar").removeClass("hide");
+	                $("#timeSelect").addClass("hide");
+	            } else {
+	                $(".date").removeClass("active");
+	                $(".time").addClass("active");
+	                $("#calendar").addClass("hide");
+	                $("#timeSelect").removeClass("hide");
+	                that.timeSelect.changeHM(parseInt($(".calendar .time").text().split(":")[0], 10), parseInt($(".calendar .time").text().split(":")[1], 10))
+	            }
+	        });
+	
+	        $(".confirm").bind("tap", function(e) {
+	            alert($(".calendar .date").data("year") + "-" + $(".calendar .date").data("month") + "-" + $(".calendar .date").data("day") + " " + $(".calendar .time").text());
 	        });
 	    }
 	}
@@ -3501,6 +3543,130 @@
 /***/ function(module, exports) {
 
 	module.exports = "<ul id=\"calendarWeek\" class=\"week\">\n    <li class=\"weekend\">日</li>\n    <li>一</li>\n    <li>二</li>\n    <li>三</li>\n    <li>四</li>\n    <li>五</li>\n    <li class=\"weekend\">六</li>\n</ul>\n<div id=\"calendarDate\" class=\"date\"></div>";
+
+/***/ },
+/* 11 */
+/***/ function(module, exports, __webpack_require__) {
+
+	__webpack_require__(12);
+	var $ = __webpack_require__(5);
+	var timeSelectHtml = __webpack_require__(13);
+	
+	var TimeSelect = function (ops) {
+	    this.ops = $.extend({
+	        dom: "timeSelect",
+	        width: '100%',
+	        hour: new Date().getHours(),
+	        minute: new Date().getMinutes(),
+	        changeTimeCallback: "" //改变时间的回调
+	    }, ops);
+	    this.init();
+	};
+	
+	TimeSelect.prototype = {
+	    init: function () {
+	        this.initTimeSelect();
+	        this.changeHM();  //改变小时和分钟
+	        this.bindEvent();
+	    },
+	    initTimeSelect: function () {
+	        $("#" + this.ops.dom).append(timeSelectHtml);
+	    },
+	    changeHM: function (hour, min) {
+	        (hour || hour == 0) && (this.ops.hour = hour);
+	        (min || min == 0) && (this.ops.minute = min);
+	        var hourPos = 56 - (40 * this.ops.hour);
+	        $(".time_hh").css("transform", "translate3d(0px, " + hourPos + "px, 0px);");
+	        var minPos = 56 - (40 * this.ops.minute);
+	        $(".time_mm").css("transform", "translate3d(0px, " + minPos + "px, 0px);");
+	    },
+	    bindEvent: function () {
+	        var that = this;
+	        var hourStartPosY = 0,
+	            hourEndPosY = 0,
+	            minStartPosY = 0,
+	            minEndPosY = 0;
+	        $(".hh_select").bind("touchstart", function (e) {
+	            hourStartPosY = parseInt(e.targetTouches[0].clientY, 10);
+	        });
+	        $(".hh_select").bind("touchend", function (e) {
+	            hourEndPosY = parseInt(e.changedTouches[0].clientY, 10);
+	            var slider = hourEndPosY - hourStartPosY;
+	            var dis = that.calculateRealDis(slider);
+	            that.animate('.time_hh', dis, function() {
+	                that.ops.hour = that.getCurrentHour();
+	                that.ops.changeTimeCallback && that.ops.changeTimeCallback(that.ops.hour, that.ops.minute);
+	            });
+	        });
+	
+	        $(".mm_select").bind("touchstart", function (e) {
+	            minStartPosY = parseInt(e.targetTouches[0].clientY, 10);
+	        });
+	        $(".mm_select").bind("touchend", function (e) {
+	            minEndPosY = parseInt(e.changedTouches[0].clientY, 10);
+	            var slider = minEndPosY - minStartPosY;
+	            var dis = that.calculateRealDis(slider);
+	            that.animate('.time_mm', dis, function() {
+	                that.ops.minute = that.getCurrentMin();
+	                that.ops.changeTimeCallback && that.ops.changeTimeCallback(that.ops.hour, that.ops.minute);
+	            });
+	        });
+	    },
+	    getCurrentHour: function() {
+	        var pos = parseInt($(".time_hh").css("transform").split(",")[1], 10);
+	        return (56 - pos) / 40;
+	    },
+	    getCurrentMin: function() {
+	        var pos = parseInt($(".time_mm").css("transform").split(",")[1], 10);
+	        return (56 - pos) / 40;
+	    },
+	    //计算最终滑动距离
+	    calculateRealDis: function(distance) {
+	        var dis = Math.abs(distance);
+	        var margin = 40 - (dis % 40); //计算距离下一个时间位置的差值
+	        return distance > 0 ? distance + margin : distance - margin;
+	    },
+	    animate: function(dom, dis, callback) {
+	        var step = Math.abs(dis) / 10 > 20 ? dis / 10 : (dis > 0 ? 20 : -20); //10步完成滑动
+	        var currentDis = 0; //初始位置
+	        var prevPos = parseInt($(dom).css("transform").split(",")[1], 10);
+	        var currentPos = 0;
+	        var that = this;
+	        this.animateHH = setInterval(function() {
+	            if(Math.abs(currentDis) < Math.abs(dis)) {
+	                currentDis = Math.abs(currentDis + step) > Math.abs(dis) ? dis : currentDis + step;
+	                currentPos = prevPos +currentDis;
+	                if(currentPos > 56) {
+	                    currentPos = 56;
+	                }
+	                if(dom.match("hh") && currentPos < -864) {
+	                    currentPos = -864;
+	                }
+	                if(dom.match("mm") && currentPos < -2304) {
+	                    currentPos = -2304;
+	                }
+	                $(dom).css("transform", "translate3d(0px, " + currentPos + "px, 0px);")
+	            } else {
+	                clearInterval(that.animateHH);
+	                callback && callback.call();
+	            }
+	        }, 20)
+	    }
+	}
+	
+	module.exports = TimeSelect;
+
+/***/ },
+/* 12 */
+/***/ function(module, exports) {
+
+	// removed by extract-text-webpack-plugin
+
+/***/ },
+/* 13 */
+/***/ function(module, exports) {
+
+	module.exports = "<div class=\"date_roll_mask\">\n    <div class=\"time_roll\">\n        <div class=\"date_grid\">\n            <div>:</div>\n        </div>\n        <div class=\"hh_select\">\n            <div class=\"gear time_hh\" data-datetype=\"time_hh\" val=\"19\" top=\"-30em\"\n                 style=\"transform: translate3d(0px, 56px, 0px);\">\n                <div class=\"tooth\">00</div>\n                <div class=\"tooth\">01</div>\n                <div class=\"tooth\">02</div>\n                <div class=\"tooth\">03</div>\n                <div class=\"tooth\">04</div>\n                <div class=\"tooth\">05</div>\n                <div class=\"tooth\">06</div>\n                <div class=\"tooth\">07</div>\n                <div class=\"tooth\">08</div>\n                <div class=\"tooth\">09</div>\n                <div class=\"tooth\">10</div>\n                <div class=\"tooth\">11</div>\n                <div class=\"tooth\">12</div>\n                <div class=\"tooth\">13</div>\n                <div class=\"tooth\">14</div>\n                <div class=\"tooth\">15</div>\n                <div class=\"tooth\">16</div>\n                <div class=\"tooth\">17</div>\n                <div class=\"tooth\">18</div>\n                <div class=\"tooth\">19</div>\n                <div class=\"tooth\">20</div>\n                <div class=\"tooth\">21</div>\n                <div class=\"tooth\">22</div>\n                <div class=\"tooth\">23</div>\n            </div>\n        </div>\n        <div class=\"mm_select\">\n            <div class=\"gear time_mm\" data-datetype=\"time_mm\" val=\"37\" top=\"-66em\"\n                 style=\"transform: translate3d(0px, 56px, 0px);\">\n                <div class=\"tooth\">00</div>\n                <div class=\"tooth\">01</div>\n                <div class=\"tooth\">02</div>\n                <div class=\"tooth\">03</div>\n                <div class=\"tooth\">04</div>\n                <div class=\"tooth\">05</div>\n                <div class=\"tooth\">06</div>\n                <div class=\"tooth\">07</div>\n                <div class=\"tooth\">08</div>\n                <div class=\"tooth\">09</div>\n                <div class=\"tooth\">10</div>\n                <div class=\"tooth\">11</div>\n                <div class=\"tooth\">12</div>\n                <div class=\"tooth\">13</div>\n                <div class=\"tooth\">14</div>\n                <div class=\"tooth\">15</div>\n                <div class=\"tooth\">16</div>\n                <div class=\"tooth\">17</div>\n                <div class=\"tooth\">18</div>\n                <div class=\"tooth\">19</div>\n                <div class=\"tooth\">20</div>\n                <div class=\"tooth\">21</div>\n                <div class=\"tooth\">22</div>\n                <div class=\"tooth\">23</div>\n                <div class=\"tooth\">24</div>\n                <div class=\"tooth\">25</div>\n                <div class=\"tooth\">26</div>\n                <div class=\"tooth\">27</div>\n                <div class=\"tooth\">28</div>\n                <div class=\"tooth\">29</div>\n                <div class=\"tooth\">30</div>\n                <div class=\"tooth\">31</div>\n                <div class=\"tooth\">32</div>\n                <div class=\"tooth\">33</div>\n                <div class=\"tooth\">34</div>\n                <div class=\"tooth\">35</div>\n                <div class=\"tooth\">36</div>\n                <div class=\"tooth\">37</div>\n                <div class=\"tooth\">38</div>\n                <div class=\"tooth\">39</div>\n                <div class=\"tooth\">40</div>\n                <div class=\"tooth\">41</div>\n                <div class=\"tooth\">42</div>\n                <div class=\"tooth\">43</div>\n                <div class=\"tooth\">44</div>\n                <div class=\"tooth\">45</div>\n                <div class=\"tooth\">46</div>\n                <div class=\"tooth\">47</div>\n                <div class=\"tooth\">48</div>\n                <div class=\"tooth\">49</div>\n                <div class=\"tooth\">50</div>\n                <div class=\"tooth\">51</div>\n                <div class=\"tooth\">52</div>\n                <div class=\"tooth\">53</div>\n                <div class=\"tooth\">54</div>\n                <div class=\"tooth\">55</div>\n                <div class=\"tooth\">56</div>\n                <div class=\"tooth\">57</div>\n                <div class=\"tooth\">58</div>\n                <div class=\"tooth\">59</div>\n            </div>\n        </div>\n    </div>\n</div>";
 
 /***/ }
 /******/ ]);
